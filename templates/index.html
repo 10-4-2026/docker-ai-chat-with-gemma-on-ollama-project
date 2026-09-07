@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple AI Agent</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 900px;
+            margin: 30px auto;
+        }
+
+        #chat-box {
+            height: 500px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .user {
+            color: blue;
+            margin: 10px 0;
+        }
+
+        .bot {
+            color: green;
+            margin: 10px 0;
+        }
+
+        #message {
+            width: 80%;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🤖 AI Agent với Ollama</h2>
+
+    <div id="chat-box"></div>
+
+    <input
+        type="text"
+        id="message"
+        placeholder="Nhập câu hỏi..."
+    />
+
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+
+        async function sendMessage() {
+
+            const input = document.getElementById("message");
+            const chatBox = document.getElementById("chat-box");
+
+            const message = input.value;
+
+            if (!message) return;
+
+            chatBox.innerHTML += `
+                <div class="user">
+                    <b>You:</b> ${message}
+                </div>
+            `;
+
+            input.value = "";
+
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+
+            const data = await response.json();
+
+            chatBox.innerHTML += `
+                <div class="bot">
+                    <b>AI:</b> ${data.answer}
+                </div>
+            `;
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        document
+            .getElementById("message")
+            .addEventListener(
+                "keypress",
+                function(event) {
+                    if(event.key === "Enter") {
+                        sendMessage();
+                    }
+                }
+            );
+
+    </script>
+
+</body>
+</html>

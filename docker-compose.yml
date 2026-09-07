@@ -1,0 +1,38 @@
+services:
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+
+    ports:
+      - "11434:11434"
+
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ollama-init:
+    image: ollama/ollama:latest
+
+    depends_on:
+      - ollama
+
+    entrypoint: >
+      sh -c "
+      sleep 20 &&
+      ollama pull gemma3:1b
+      "
+
+    volumes:
+      - ollama_data:/root/.ollama
+
+  agent:
+    build: .
+
+    depends_on:
+      - ollama
+
+    ports:
+      - "8000:8000"
+
+volumes:
+  ollama_data:
