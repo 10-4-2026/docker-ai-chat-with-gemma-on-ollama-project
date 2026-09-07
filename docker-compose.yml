@@ -16,6 +16,9 @@ services:
     depends_on:
       - ollama
 
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+
     entrypoint: >
       sh -c "
       sleep 20 &&
