@@ -1,36 +1,64 @@
 services:
+# Khai báo danh sách các container mà Docker Compose sẽ quản lý.
+# Tương đương
+# docker run ...
+# docker run ...
+# docker run ...
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
+  ollama: # định nghĩa tên dịch vụ
+    # các dịch vụ khác có thể gọi http://ollama:11434 thông qua docker network
+
+    image: ollama/ollama:latest # tải image to dockerhub nếu máy chưa có 
+    container_name: ollama      # dặt tên cố định cho container.
 
     ports:
-      - "11434:11434"
+      - "11434:11434" # ánh xạ cổng
+      # Máy thật      Container
+      # 11434   -->   11434
+      # có thể gọi curl http://localhost:11434 vào ollama từ máy chủ
 
-    volumes:
+    volumes: # mount voulume ollama_data vào thư mục /root/.ollama trong container      
       - ollama_data:/root/.ollama
+      # trong đó chứa 
+      # models/
+      # blobs/
+      # manifest/
+      # nếu docker compose down thì model vẫn còn
 
-  ollama-init:
+  ollama-init: # Container chỉ chạy 1 lần để tải model
     image: ollama/ollama:latest
 
+    # Khởi động ollama trước
+    # Khởi động ollama-init sau
     depends_on:
       - ollama
 
+    # biến môi trường
+    # Hãy kết nối tới
+    # container "ollama"
+    # cổng 11434
     environment:
       OLLAMA_HOST: http://ollama:11434
 
+    # sleep 20 giây để ollama sẵn sàng và container sẵn sàng
+    # Ghi đè lệnh startup mặc định của container.
     entrypoint: >
       sh -c "
       sleep 20 &&
       ollama pull gemma3:1b
       "
 
+    # Dùng chung volume với service Ollama.
+    # Container này tải model.
+    # Container Ollama nhìn thấy model ngay.
+    # Vì cả hai cùng dùng: ollama_data
     volumes:
       - ollama_data:/root/.ollama
 
-  agent:
+  agent: # Docker sẽ build image từ Dockerfile trong thư mục hiện tại.
     build: .
 
+    # quá trình khởi động ollama -> agent
     depends_on:
       - ollama
 
