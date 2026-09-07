@@ -64,32 +64,49 @@
             if (!message) return;
 
             chatBox.innerHTML += `
-                <div class="user">
+                <div>
                     <b>You:</b> ${message}
                 </div>
             `;
 
             input.value = "";
 
-            const response = await fetch("/chat", {
+            const botDiv = document.createElement("div");
+
+            botDiv.innerHTML = "<b>AI:</b> ";
+
+            chatBox.appendChild(botDiv);
+
+            const response = await fetch("/chat-stream", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
+                    user_id: "default",
                     message: message
                 })
             });
 
-            const data = await response.json();
+            const reader = response.body.getReader();
 
-            chatBox.innerHTML += `
-                <div class="bot">
-                    <b>AI:</b> ${data.answer}
-                </div>
-            `;
+            const decoder = new TextDecoder();
 
-            chatBox.scrollTop = chatBox.scrollHeight;
+            while (true) {
+
+                const { value, done } =
+                    await reader.read();
+
+                if (done) break;
+
+                const chunk =
+                    decoder.decode(value);
+
+                botDiv.innerHTML += chunk;
+
+                chatBox.scrollTop =
+                    chatBox.scrollHeight;
+            }
         }
 
         document

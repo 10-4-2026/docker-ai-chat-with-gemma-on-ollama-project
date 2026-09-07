@@ -6,6 +6,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from fastapi.responses import HTMLResponse, StreamingResponse
+import json
+
+
 
 app = FastAPI()
 
@@ -69,12 +73,10 @@ async def health():
         "status": "ok"
     }
 
-
-@app.post("/chat")
-async def chat(req: ChatRequest):
+@app.post("/chat-stream")
+async def chat_stream(req: ChatRequest):
 
     if req.user_id not in chat_histories:
-
         chat_histories[req.user_id] = [
             SYSTEM_PROMPT.copy()
         ]
@@ -88,45 +90,59 @@ async def chat(req: ChatRequest):
         }
     )
 
-    try:
+    def generate():
 
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": MODEL_NAME,
-                "messages": history,
-                "stream": False
-            },
-            timeout=300
-        )
+        full_answer = ""
 
-        response.raise_for_status()
+        try:
 
-        answer = response.json()["message"]["content"]
+            response = requests.post(
+                OLLAMA_URL,
+                json={
+                    "model": MODEL_NAME,
+                    "messages": history,
+                    "stream": True
+                },
+                stream=True,
+                timeout=300
+            )
 
-        history.append(
-            {
-                "role": "assistant",
-                "content": answer
-            }
-        )
+            response.raise_for_status()
 
-        # chỉ giữ 20 message gần nhất
-        if len(history) > 20:
-            history = [history[0]] + history[-19:]
-            chat_histories[req.user_id] = history
+            for line in response.iter_lines():
 
-        return {
-            "answer": answer
-        }
+                if not line:
+                    continue
 
-    except Exception as ex:
+                chunk = json.loads(line)
 
-        return {
-            "answer": f"Ollama calling error: {str(ex)}"
-        }
+                if "message" in chunk:
 
+                    token = chunk["message"]["content"]
 
+                    full_answer += token
+
+                    yield token
+
+            history.append(
+                {
+                    "role": "assistant",
+                    "content": full_answer
+                }
+            )
+
+            if len(history) > 20:
+                history[:] = [history[0]] + history[-19:]
+
+        except Exception as ex:
+
+            yield f"\n\n[ERROR] {str(ex)}"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/plain"
+    )
+    
 @app.post("/reset")
 async def reset_memory():
 
