@@ -1,0 +1,6 @@
+- Đã chạy ổn trên Linux-Ubuntu, chưa thử nghiệm trên MacOSX, BSD hoặc các bản phân phối Linux dựa trên Redhat, Slackware hay OpenSuse
+- Để thực thi chạy lệnh : docker compose up -d
+- Sau đó truy cập vào http://127.0.0.1:8000/ hoặc http://localhost:8000/ để nói chuyện với trợ lý ảo
+- Lân đầu chạy sẽ cần thời gian thiết lập, ollama và mô hình gemma3:1b sẽ được tải xuống, các lần sàu thì không cần tải lại
+- Để tắt chương trình thì chạy lệnh:  docker compose down
+- Lưu ý sẽ cần khoảng 9GB ổ cứng để chứa mô hình cũng như ollama
