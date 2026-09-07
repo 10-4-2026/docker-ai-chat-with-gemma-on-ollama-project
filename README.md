@@ -1,3 +1,4 @@
+- 7-9-2026
 - Đã chạy ổn trên Linux-Ubuntu, chưa thử nghiệm trên MacOSX, BSD hoặc các bản phân phối Linux dựa trên Redhat, Slackware hay OpenSuse
 - Để thực thi chạy lệnh : docker compose up -d
 - Sau đó truy cập vào http://127.0.0.1:8000/ hoặc http://localhost:8000/ để nói chuyện với trợ lý ảo
